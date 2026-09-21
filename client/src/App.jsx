@@ -5,6 +5,7 @@ import "./App.css";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
   
 
     const [serverStatus, setServerStatus] = useState("Checking...");
@@ -24,6 +25,25 @@ function App() {const [showAuth, setShowAuth] = useState(false);
         setServerStatus("Backend Offline");
       });
   }, []);
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    const email = event.target.email.value;
+    const password = event.target.password.value;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Login successful!");
+  };
 
   const handleSignup = async (event) => {
     event.preventDefault();
@@ -48,9 +68,9 @@ function App() {const [showAuth, setShowAuth] = useState(false);
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>Welcome to JD Friendly</h2>
-        <p>Sign in or create your account.</p>
-        <form className="auth-form" onSubmit={handleSignup}>
+        <h2>{authMode === "login" ? "Welcome Back" : "Create Your Account"}</h2>
+        <p>{authMode === "login" ? "Log in to continue to JD Friendly." : "Create your JD Friendly account."}</p>
+        <form className="auth-form" onSubmit={authMode === "login" ? handleLogin : handleSignup}>
           <label>
             Email
             <input name="email" type="email" placeholder="Enter your email" />
@@ -62,7 +82,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
           </label>
 
           <button type="submit" className="auth-submit">
-            Continue
+            {authMode === "login" ? "Log in" : "Create account"}
           </button>
         </form>
 
@@ -91,7 +111,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
           </div>
         </div>
 
-        <button className="login-button" onClick={() => setShowAuth(true)}>
+        <button className="login-button" onClick={() => { setAuthMode("login"); setShowAuth(true); }}>
   Log in
 </button>
       </header>
@@ -115,7 +135,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
           </p>
 
           <div className="hero-actions">
-            <button className="primary-button" onClick={() => setShowAuth(true)}>
+            <button className="primary-button" onClick={() => { setAuthMode("signup"); setShowAuth(true); }}>
   Create account
 </button>
             <button className="secondary-button">Explore JD Friendly</button>
@@ -255,3 +275,11 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 }
 
 export default App;
+
+
+
+
+
+
+
+
