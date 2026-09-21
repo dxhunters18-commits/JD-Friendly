@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import "./Auth.css";
 import "./App.css";
 const API_URL = import.meta.env.VITE_API_URL;
 
-function App() {
+function App() {const [showAuth, setShowAuth] = useState(false);
+  
+
     const [serverStatus, setServerStatus] = useState("Checking...");
 
   useEffect(() => {
@@ -21,6 +24,58 @@ function App() {
         setServerStatus("Backend Offline");
       });
   }, []);
+
+  const handleSignup = async (event) => {
+    event.preventDefault();
+
+    const email = event.target.email.value;
+    const password = event.target.password.value;
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Account created successfully! Please check your email to confirm your account.");
+  };
+
+  if (showAuth) {
+  return (
+    <div className="auth-page">
+      <div className="auth-card">
+        <h2>Welcome to JD Friendly</h2>
+        <p>Sign in or create your account.</p>
+        <form className="auth-form" onSubmit={handleSignup}>
+          <label>
+            Email
+            <input name="email" type="email" placeholder="Enter your email" />
+          </label>
+
+          <label>
+            Password
+            <input name="password" type="password" placeholder="Enter your password" />
+          </label>
+
+          <button type="submit" className="auth-submit">
+            Continue
+          </button>
+        </form>
+
+        <div className="auth-switch">
+          <button type="button" onClick={() => setShowAuth(false)}>
+            ← Back to JD Friendly
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
   return (
     <div className="app">
       <div className="background-glow glow-one"></div>
@@ -36,7 +91,9 @@ function App() {
           </div>
         </div>
 
-        <button className="login-button">Log in</button>
+        <button className="login-button" onClick={() => setShowAuth(true)}>
+  Log in
+</button>
       </header>
 
       <main className="hero">
@@ -58,7 +115,9 @@ function App() {
           </p>
 
           <div className="hero-actions">
-            <button className="primary-button">Create account</button>
+            <button className="primary-button" onClick={() => setShowAuth(true)}>
+  Create account
+</button>
             <button className="secondary-button">Explore JD Friendly</button>
           </div>
 
