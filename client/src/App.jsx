@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
-import "./Auth.css";
+import "./auth.css";
 import "./App.css";
 const API_URL = import.meta.env.VITE_API_URL;
 
