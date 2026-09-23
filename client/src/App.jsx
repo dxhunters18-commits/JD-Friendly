@@ -1,213 +1,350 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase";
-import "./auth.css";
 import "./App.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const navItems = [
-  { id: "home", label: "Home", icon: "⌂" },
-  { id: "messages", label: "Chats", icon: "💬" },
-  { id: "photos", label: "Photos", icon: "📸" },
-  { id: "games", label: "Games", icon: "🎮" },
-  { id: "music", label: "Music", icon: "🎵" },
-  { id: "connect", label: "Friends", icon: "👥" },
+const QUOTES = [
+  "The best moments are the ones we share.",
+  "Friendship is the quiet comfort of knowing someone is there.",
+  "Life becomes beautiful when shared with the right people.",
+  "Good friends make ordinary moments unforgettable.",
 ];
 
-const demoFriends = [
-  { name: "Alex", status: "Online now", color: "purple", avatar: "A" },
-  { name: "Maya", status: "Active 5m ago", color: "pink", avatar: "M" },
-  { name: "Daniel", status: "Online now", color: "blue", avatar: "D" },
-  { name: "Sara", status: "Active 12m ago", color: "orange", avatar: "S" },
+const NAV = [
+  ["home", "Home", "⌂"],
+  ["friends", "Friends", "♧"],
+  ["messages", "Messages", "◌"],
+  ["photos", "Photos", "▧"],
+  ["games", "Games", "◇"],
+  ["music", "Music", "♫"],
+  ["profile", "Profile", "○"],
+  ["settings", "Settings", "⚙"],
 ];
 
-const demoChats = [
-  {
-    name: "Alex",
-    message: "Hey! Are you free tonight? 👋",
-    time: "2m",
-    color: "purple",
-    avatar: "A",
-  },
-  {
-    name: "Maya",
-    message: "That photo is amazing! 🔥",
-    time: "18m",
-    color: "pink",
-    avatar: "M",
-  },
-  {
-    name: "Daniel",
-    message: "Let's play something 🎮",
-    time: "34m",
-    color: "blue",
-    avatar: "D",
-  },
-];
+function Logo({ compact = false }) {
+  return (
+    <div className={`jd-logo ${compact ? "compact" : ""}`}>
+      <div className="jd-mark">
+        <span>J</span>
+        <span>D</span>
+      </div>
+      {!compact && (
+        <div className="jd-wordmark">
+          <strong>JD Friendly</strong>
+          <small>with friends</small>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ icon, title, text, action, onAction }) {
+  return (
+    <div className="empty-state">
+      <div className="empty-icon">{icon}</div>
+      <h2>{title}</h2>
+      <p>{text}</p>
+      {action && (
+        <button className="premium-button" onClick={onAction}>
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function TicTacToe() {
+  const [board, setBoard] = useState(Array(9).fill(""));
+  const [turn, setTurn] = useState("X");
+
+  const winner = useMemo(() => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    for (const [a, b, c] of lines) {
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
+      }
+    }
+
+    return board.every(Boolean) ? "draw" : null;
+  }, [board]);
+
+  function play(index) {
+    if (board[index] || winner) return;
+
+    const next = [...board];
+    next[index] = turn;
+    setBoard(next);
+    setTurn(turn === "X" ? "O" : "X");
+  }
+
+  function reset() {
+    setBoard(Array(9).fill(""));
+    setTurn("X");
+  }
+
+  return (
+    <div className="game-card">
+      <div className="game-card-top">
+        <div>
+          <span className="eyebrow">ONLINE GAME</span>
+          <h3>Tic Tac Toe</h3>
+        </div>
+        <span className="game-status">PRIVATE</span>
+      </div>
+
+      <div className="tic-board">
+        {board.map((cell, index) => (
+          <button key={index} onClick={() => play(index)}>
+            {cell}
+          </button>
+        ))}
+      </div>
+
+      <div className="game-footer">
+        <span>
+          {winner
+            ? winner === "draw"
+              ? "Draw game"
+              : `${winner} wins`
+            : `Turn: ${turn}`}
+        </span>
+
+        <button className="small-button" onClick={reset}>
+          New game
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ConnectFour() {
+  const [cells, setCells] = useState(Array(42).fill(""));
+  const [turn, setTurn] = useState("A");
+
+  function drop(column) {
+    for (let row = 5; row >= 0; row--) {
+      const index = row * 7 + column;
+      if (!cells[index]) {
+        const next = [...cells];
+        next[index] = turn;
+        setCells(next);
+        setTurn(turn === "A" ? "B" : "A");
+        return;
+      }
+    }
+  }
+
+  function reset() {
+    setCells(Array(42).fill(""));
+    setTurn("A");
+  }
+
+  return (
+    <div className="game-card">
+      <div className="game-card-top">
+        <div>
+          <span className="eyebrow">ONLINE GAME</span>
+          <h3>Connect Four</h3>
+        </div>
+        <span className="game-status">PRIVATE</span>
+      </div>
+
+      <div className="connect-board">
+        {cells.map((cell, index) => (
+          <button
+            key={index}
+            onClick={() => drop(index % 7)}
+            className={cell ? `piece-${cell}` : ""}
+          >
+            {cell}
+          </button>
+        ))}
+      </div>
+
+      <div className="game-footer">
+        <span>Player {turn}'s turn</span>
+        <button className="small-button" onClick={reset}>
+          New game
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState("home");
   const [authMode, setAuthMode] = useState("login");
-  const [showAuth, setShowAuth] = useState(false);
-  const [activePage, setActivePage] = useState("home");
-  const [serverStatus, setServerStatus] = useState("Connecting");
-  const [search, setSearch] = useState("");
-  const [selectedChat, setSelectedChat] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [toast, setToast] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [theme, setTheme] = useState("violet");
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   useEffect(() => {
-    checkServer();
+    let active = true;
 
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+      if (active) {
+        setSession(data.session);
+        setLoading(false);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const checkServer = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/health`);
-      const data = await response.json();
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setQuoteIndex((value) => (value + 1) % QUOTES.length);
+    }, 6000);
 
-      if (data.success) {
-        setServerStatus("Online");
-      } else {
-        setServerStatus("Offline");
-      }
-    } catch {
-      setServerStatus("Offline");
-    }
-  };
+    return () => clearInterval(timer);
+  }, []);
 
-  const showToast = (text) => {
-    setToast(text);
-    window.setTimeout(() => setToast(""), 2500);
-  };
+  const displayName =
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.email?.split("@")[0] ||
+    "Friend";
 
-  const handleLogin = async (event) => {
+  async function handleAuth(event) {
     event.preventDefault();
-
-    const email = event.target.email.value;
-    const password = event.target.password.value;
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setUser(data.user);
-    setShowAuth(false);
-    showToast("Welcome back to JD Friendly ✨");
-  };
-
-  const handleSignup = async (event) => {
-    event.preventDefault();
-
-    const email = event.target.email.value;
-    const password = event.target.password.value;
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (data.session) {
-      setUser(data.user);
-      setShowAuth(false);
-      showToast("Welcome to JD Friendly 🎉");
-    } else {
-      alert(
-        "Your account was created. Please check your email and confirm your account before logging in."
-      );
-      setAuthMode("login");
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setActivePage("home");
-    showToast("See you soon 👋");
-  };
-
-  const sendMessage = () => {
-    if (!message.trim()) return;
-
+    setAuthError("");
     setMessage("");
-    showToast("Message ready to send 💬");
-  };
+    setAuthLoading(true);
 
-  const firstLetter = (
-    user?.email?.charAt(0) ||
-    "J"
-  ).toUpperCase();
+    try {
+      if (authMode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-  if (showAuth) {
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        setMessage(
+          "Your account has been created. Check your email if confirmation is required."
+        );
+      }
+    } catch (error) {
+      setAuthError(error.message || "Something went wrong.");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    setPage("home");
+  }
+
+  if (loading) {
     return (
-      <div className="jd-auth-screen">
-        <div className="auth-background">
-          <div className="auth-orb orb-a" />
-          <div className="auth-orb orb-b" />
-          <div className="auth-orb orb-c" />
+      <div className="loading-screen">
+        <Logo />
+        <div className="loading-line">
+          <span />
         </div>
+        <p>Preparing your private space</p>
+      </div>
+    );
+  }
 
-        <button
-          className="auth-home-button"
-          onClick={() => setShowAuth(false)}
-        >
-          ← Back
-        </button>
+  if (!session) {
+    return (
+      <div className={`auth-screen theme-${theme}`}>
+        <div className="auth-orbit orbit-one" />
+        <div className="auth-orbit orbit-two" />
 
-        <div className="jd-auth-card">
-          <div className="auth-brand">
-            <div className="auth-brand-logo">JD</div>
-            <div>
-              <strong>JD Friendly</strong>
-              <span>your people. your world.</span>
-            </div>
-          </div>
+        <div className="auth-left">
+          <Logo />
 
-          <div className="auth-heading">
-            <span>{authMode === "login" ? "WELCOME BACK" : "JOIN THE FAMILY"}</span>
+          <div className="auth-intro">
+            <span className="eyebrow">PRIVATE SOCIAL SPACE</span>
             <h1>
-              {authMode === "login"
-                ? "Good to see you."
-                : "Let's get connected."}
+              Friends.
+              <br />
+              <em>Only the people you choose.</em>
             </h1>
             <p>
-              {authMode === "login"
-                ? "Your friends are waiting for you."
-                : "Create your space and bring your people together."}
+              JD Friendly is a private place for real friendships,
+              conversations, photos, games and music.
             </p>
           </div>
 
-          <form
-            className="jd-auth-form"
-            onSubmit={authMode === "login" ? handleLogin : handleSignup}
-          >
+          <div className="quote">
+            <span>“</span>
+            <p>{QUOTES[quoteIndex]}</p>
+          </div>
+        </div>
+
+        <div className="auth-card">
+          <div className="auth-card-head">
+            <span className="eyebrow">
+              {authMode === "login" ? "WELCOME BACK" : "JOIN JD FRIENDLY"}
+            </span>
+            <h2>{authMode === "login" ? "Enter your space" : "Create your space"}</h2>
+            <p>
+              {authMode === "login"
+                ? "Sign in to continue privately."
+                : "Create your personal private account."}
+            </p>
+          </div>
+
+          <form onSubmit={handleAuth}>
+            {authMode === "signup" && (
+              <label>
+                <span>Name</span>
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </label>
+            )}
+
             <label>
-              <span>Email address</span>
+              <span>Email</span>
               <input
-                name="email"
                 type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 required
               />
@@ -216,717 +353,391 @@ function App() {
             <label>
               <span>Password</span>
               <input
-                name="password"
                 type="password"
-                placeholder="Enter your password"
-                minLength="6"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Your password"
                 required
               />
             </label>
 
-            <button type="submit" className="jd-auth-submit">
-              {authMode === "login"
+            {authError && <div className="form-error">{authError}</div>}
+            {message && <div className="form-success">{message}</div>}
+
+            <button className="auth-submit" disabled={authLoading}>
+              {authLoading
+                ? "Please wait..."
+                : authMode === "login"
                 ? "Enter JD Friendly"
-                : "Create my account"}
-              <span>→</span>
+                : "Create account"}
             </button>
           </form>
 
-          <div className="auth-divider">
-            <span>or</span>
-          </div>
-
           <div className="auth-switch">
-            {authMode === "login" ? (
-              <>
-                New here?
-                <button
-                  onClick={() => setAuthMode("signup")}
-                  type="button"
-                >
-                  Create an account
-                </button>
-              </>
-            ) : (
-              <>
-                Already a member?
-                <button
-                  onClick={() => setAuthMode("login")}
-                  type="button"
-                >
-                  Log in
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="auth-footer">
-            <span>🔒</span>
-            Your account is protected by secure authentication.
+            {authMode === "login" ? "New to JD Friendly?" : "Already have an account?"}
+            <button
+              onClick={() => {
+                setAuthMode(authMode === "login" ? "signup" : "login");
+                setAuthError("");
+                setMessage("");
+              }}
+            >
+              {authMode === "login" ? "Create account" : "Sign in"}
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="jd-landing">
-        <div className="landing-stars" />
-        <div className="landing-gradient gradient-one" />
-        <div className="landing-gradient gradient-two" />
-        <div className="landing-gradient gradient-three" />
+  function renderPage() {
+    if (page === "home") {
+      return (
+        <section className="page">
+          <div className="hero-panel">
+            <div>
+              <span className="eyebrow">YOUR PRIVATE SPACE</span>
+              <h1>
+                Welcome,
+                <br />
+                <em>{displayName}.</em>
+              </h1>
+              <p>
+                A private place for you and the friends you choose.
+              </p>
+            </div>
 
-        <header className="landing-header">
-          <div className="landing-logo-wrap">
-            <div className="landing-logo">JD</div>
-            <div className="landing-brand-text">
-              <strong>JD Friendly</strong>
-              <span>Connect • Share • Play</span>
+            <div className="hero-mark">
+              <Logo compact />
             </div>
           </div>
 
-          <button
-            className="landing-login-button"
-            onClick={() => {
-              setAuthMode("login");
-              setShowAuth(true);
-            }}
-          >
-            Log in
+          <div className="quote-panel">
+            <span>“</span>
+            <div>
+              <p>{QUOTES[quoteIndex]}</p>
+              <small>JD Friendly</small>
+            </div>
+          </div>
+
+          <div className="feature-grid">
+            {[
+              ["♧", "Friends", "Connect with real people you choose.", "friends"],
+              ["◌", "Messages", "Private conversations between friends.", "messages"],
+              ["▧", "Photos", "Share memories privately with selected people.", "photos"],
+              ["◇", "Games", "Play together with friends online.", "games"],
+              ["♫", "Music", "Keep your music space close.", "music"],
+              ["○", "Your Profile", "Control how your private identity appears.", "profile"],
+            ].map(([icon, title, text, target]) => (
+              <button
+                key={target}
+                className="feature-card"
+                onClick={() => setPage(target)}
+              >
+                <span className="feature-icon">{icon}</span>
+                <strong>{title}</strong>
+                <p>{text}</p>
+                <span className="feature-arrow">→</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "friends") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="PEOPLE YOU CHOOSE"
+            title="Friends"
+            text="Your private friend space. No public follower lists."
+          />
+
+          <div className="private-panel">
+            <div className="search-row">
+              <input placeholder="Search for a person..." />
+              <button className="premium-button">Find</button>
+            </div>
+
+            <EmptyState
+              icon="♧"
+              title="Your friends will appear here"
+              text="There are no demo profiles here. Only real people you connect with will appear."
+            />
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "messages") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="PRIVATE CONVERSATIONS"
+            title="Messages"
+            text="One-to-one conversations with your friends."
+          />
+
+          <div className="private-panel">
+            <EmptyState
+              icon="◌"
+              title="No conversations yet"
+              text="Your private conversations will appear here after you connect with friends."
+            />
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "photos") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="PRIVATE MEMORIES"
+            title="Photos"
+            text="Photos shared privately between you and selected friends."
+          />
+
+          <div className="private-panel photo-private">
+            <div className="privacy-badge">PRIVATE BY DESIGN</div>
+            <EmptyState
+              icon="▧"
+              title="No private photos yet"
+              text="There is no public gallery here. Photos belong to you and the people you choose."
+            />
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "games") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="PLAY TOGETHER"
+            title="Games"
+            text="Games are for you and your online friends."
+          />
+
+          <div className="games-grid">
+            <TicTacToe />
+            <ConnectFour />
+          </div>
+
+          <div className="private-panel game-note">
+            <span className="eyebrow">PRIVATE MULTIPLAYER</span>
+            <h3>Invite a friend when multiplayer is connected.</h3>
+            <p>
+              These games are the private game area. Real online multiplayer
+              requires the shared game service to connect both players.
+            </p>
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "music") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="YOUR SOUND"
+            title="Music"
+            text="A private place for your music experience."
+          />
+
+          <div className="music-panel">
+            <div className="music-disc">
+              <div>JD</div>
+            </div>
+            <div>
+              <span className="eyebrow">JD FRIENDLY MUSIC</span>
+              <h2>Your music space</h2>
+              <p>
+                Music belongs here without turning your private space into a
+                public feed.
+              </p>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "profile") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="YOUR IDENTITY"
+            title="Profile"
+            text="Only your own account information belongs here."
+          />
+
+          <div className="profile-card">
+            <div className="profile-avatar">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <span className="eyebrow">YOUR NAME</span>
+              <h2>{displayName}</h2>
+              <p>{session.user.email}</p>
+            </div>
+          </div>
+
+          <div className="private-panel">
+            <div className="settings-row">
+              <div>
+                <strong>Profile photo</strong>
+                <p>Change the photo people see on your private profile.</p>
+              </div>
+              <button className="small-button">Change</button>
+            </div>
+
+            <div className="settings-row">
+              <div>
+                <strong>Username</strong>
+                <p>Choose how your friends identify you.</p>
+              </div>
+              <button className="small-button">Edit</button>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (page === "settings") {
+      return (
+        <section className="page">
+          <PageHeading
+            eyebrow="CONTROL YOUR SPACE"
+            title="Settings"
+            text="Your private preferences, your way."
+          />
+
+          <div className="settings-stack">
+            <div className="setting-section">
+              <span className="eyebrow">APPEARANCE</span>
+              <h3>Theme</h3>
+              <p>Keep the black foundation and choose your accent.</p>
+
+              <div className="theme-options">
+                {[
+                  ["violet", "Royal Violet"],
+                  ["blue", "Midnight Blue"],
+                  ["gold", "Classic Gold"],
+                  ["red", "Deep Ruby"],
+                  ["green", "Emerald"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    className={`theme-choice ${value} ${
+                      theme === value ? "active" : ""
+                    }`}
+                    onClick={() => setTheme(value)}
+                  >
+                    <span />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="setting-section">
+              <span className="eyebrow">ACCOUNT</span>
+
+              <div className="settings-row">
+                <div>
+                  <strong>Profile</strong>
+                  <p>Change your profile photo, name and username.</p>
+                </div>
+                <button
+                  className="small-button"
+                  onClick={() => setPage("profile")}
+                >
+                  Open
+                </button>
+              </div>
+
+              <div className="settings-row">
+                <div>
+                  <strong>Sign out</strong>
+                  <p>Leave this device securely.</p>
+                </div>
+                <button className="danger-button" onClick={logout}>
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    return null;
+  }
+
+  return (
+    <div className={`app theme-${theme}`}>
+      <aside className="sidebar">
+        <Logo />
+
+        <nav>
+          {NAV.map(([id, label, icon]) => (
+            <button
+              key={id}
+              className={page === id ? "active" : ""}
+              onClick={() => setPage(id)}
+            >
+              <span>{icon}</span>
+              <label>{label}</label>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="mini-user">
+            <div>{displayName.charAt(0).toUpperCase()}</div>
+            <span>{displayName}</span>
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <header className="topbar">
+          <div>
+            <span className="topbar-title">JD Friendly</span>
+            <span className="topbar-subtitle">private social space</span>
+          </div>
+
+          <button className="top-profile" onClick={() => setPage("profile")}>
+            <span>{displayName.charAt(0).toUpperCase()}</span>
           </button>
         </header>
 
-        <main className="landing-main">
-          <div className="landing-pill">
-            <span className="pulse-dot" />
-            YOUR FRIENDS. ONE PLACE.
-          </div>
-
-          <h1>
-            Your world.
-            <br />
-            <span>Your people.</span>
-          </h1>
-
-          <p className="landing-description">
-            A beautiful place to chat, share photos, play games,
-            discover music and stay close to the people who matter.
-          </p>
-
-          <div className="landing-buttons">
-            <button
-              className="landing-primary"
-              onClick={() => {
-                setAuthMode("signup");
-                setShowAuth(true);
-              }}
-            >
-              Create your account
-              <span>→</span>
-            </button>
-
-            <button
-              className="landing-secondary"
-              onClick={() => {
-                setAuthMode("login");
-                setShowAuth(true);
-              }}
-            >
-              I already have an account
-            </button>
-          </div>
-
-          <div className="landing-features">
-            <div>
-              <span>💬</span>
-              <strong>Chat</strong>
-            </div>
-            <div>
-              <span>📸</span>
-              <strong>Photos</strong>
-            </div>
-            <div>
-              <span>🎮</span>
-              <strong>Games</strong>
-            </div>
-            <div>
-              <span>🎵</span>
-              <strong>Music</strong>
-            </div>
-            <div>
-              <span>🌎</span>
-              <strong>Friends</strong>
-            </div>
-          </div>
-        </main>
-
-        <div className="floating-card card-left">
-          <div className="mini-avatar purple-avatar">A</div>
-          <div>
-            <strong>Alex is online</strong>
-            <span>Say hello 👋</span>
-          </div>
-        </div>
-
-        <div className="floating-card card-right">
-          <span className="music-disc">♫</span>
-          <div>
-            <strong>Now playing</strong>
-            <span>Good vibes only</span>
-          </div>
-        </div>
-
-        <div className="landing-bottom">
-          <span>Private</span>
-          <i />
-          <span>Friendly</span>
-          <i />
-          <span>Made for people</span>
-        </div>
-      </div>
-    );
-  }
-
-  const renderHome = () => (
-    <>
-      <section className="hero-card">
-        <div className="hero-card-glow" />
-        <div className="hero-copy">
-          <span className="eyebrow">YOUR SPACE</span>
-          <h1>
-            Hey, {user.email?.split("@")[0] || "friend"}
-            <span>.</span>
-          </h1>
-          <p>
-            Everything you love about staying close to your people,
-            all in one place.
-          </p>
-
-          <div className="hero-actions">
-            <button
-              onClick={() => setActivePage("messages")}
-              className="hero-chat-button"
-            >
-              <span>💬</span>
-              Start chatting
-            </button>
-            <button
-              onClick={() => setActivePage("connect")}
-              className="hero-outline-button"
-            >
-              Find friends
-            </button>
-          </div>
-        </div>
-
-        <div className="hero-avatar-area">
-          <div className="hero-avatar-ring">
-            <div className="hero-avatar">{firstLetter}</div>
-          </div>
-          <span>
-            <i />
-            Online
-          </span>
-        </div>
-      </section>
-
-      <section className="section-title-row">
-        <div>
-          <span className="eyebrow">EXPLORE</span>
-          <h2>Made for your everyday.</h2>
-        </div>
-      </section>
-
-      <section className="home-grid">
-        <button
-          className="home-feature chat-feature"
-          onClick={() => setActivePage("messages")}
-        >
-          <div className="feature-top">
-            <span className="big-feature-icon">💬</span>
-            <span className="feature-arrow">↗</span>
-          </div>
-          <h3>Friendly chats</h3>
-          <p>Talk privately with the people you care about.</p>
-          <div className="feature-footer">
-            <span>3 active conversations</span>
-          </div>
-        </button>
-
-        <button
-          className="home-feature photo-feature"
-          onClick={() => setActivePage("photos")}
-        >
-          <div className="photo-preview">
-            <div>📸</div>
-            <div>✨</div>
-            <div>🌈</div>
-          </div>
-          <h3>Photo moments</h3>
-          <p>Keep your favorite memories together.</p>
-          <div className="feature-footer">
-            <span>Share a moment</span>
-          </div>
-        </button>
-
-        <button
-          className="home-feature game-feature"
-          onClick={() => setActivePage("games")}
-        >
-          <div className="game-art">
-            <span>🎮</span>
-            <b>PLAY</b>
-          </div>
-          <h3>Play together</h3>
-          <p>Jump into quick games with your friends.</p>
-          <div className="feature-footer">
-            <span>Game night starts here</span>
-          </div>
-        </button>
-
-        <button
-          className="home-feature music-feature"
-          onClick={() => setActivePage("music")}
-        >
-          <div className="music-art">
-            <span>♫</span>
-            <div className="equalizer">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
-          </div>
-          <h3>Music together</h3>
-          <p>Discover sounds and share the vibe.</p>
-          <div className="feature-footer">
-            <span>Open your music room</span>
-          </div>
-        </button>
-      </section>
-
-      <section className="friends-panel">
-        <div className="section-title-row compact">
-          <div>
-            <span className="eyebrow">PEOPLE</span>
-            <h2>Your friends</h2>
-          </div>
-          <button onClick={() => setActivePage("connect")}>
-            See all →
-          </button>
-        </div>
-
-        <div className="friend-row">
-          {demoFriends.map((friend) => (
-            <button
-              key={friend.name}
-              className="friend-card"
-              onClick={() => {
-                setActivePage("messages");
-                setSelectedChat(friend);
-              }}
-            >
-              <div className={`friend-avatar ${friend.color}`}>
-                {friend.avatar}
-                <i />
-              </div>
-              <strong>{friend.name}</strong>
-              <span>{friend.status}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    </>
-  );
-
-  const renderMessages = () => (
-    <section className="page-content">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">MESSAGES</span>
-          <h1>Your conversations</h1>
-          <p>Stay close to your people, wherever they are.</p>
-        </div>
-        <button
-          className="page-primary-button"
-          onClick={() => showToast("New chat coming next 💬")}
-        >
-          + New chat
-        </button>
-      </div>
-
-      <div className="chat-layout">
-        <div className="chat-list">
-          <div className="chat-search">
-            <span>⌕</span>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search conversations"
-            />
-          </div>
-
-          {demoChats
-            .filter((chat) =>
-              chat.name.toLowerCase().includes(search.toLowerCase())
-            )
-            .map((chat) => (
-              <button
-                key={chat.name}
-                className={`chat-list-item ${
-                  selectedChat?.name === chat.name ? "selected" : ""
-                }`}
-                onClick={() => setSelectedChat(chat)}
-              >
-                <div className={`chat-avatar ${chat.color}`}>
-                  {chat.avatar}
-                  <i />
-                </div>
-                <div className="chat-list-copy">
-                  <strong>{chat.name}</strong>
-                  <span>{chat.message}</span>
-                </div>
-                <small>{chat.time}</small>
-              </button>
-            ))}
-        </div>
-
-        <div className="chat-window">
-          {selectedChat ? (
-            <>
-              <div className="chat-window-header">
-                <div className={`chat-avatar ${selectedChat.color}`}>
-                  {selectedChat.avatar}
-                  <i />
-                </div>
-                <div>
-                  <strong>{selectedChat.name}</strong>
-                  <span>Online now</span>
-                </div>
-              </div>
-
-              <div className="chat-messages">
-                <div className="message received">
-                  Hey! Welcome to JD Friendly 👋
-                </div>
-                <div className="message received">
-                  This is your beautiful new chat space.
-                </div>
-                <div className="message sent">
-                  This looks amazing! ✨
-                </div>
-              </div>
-
-              <div className="chat-input-row">
-                <button onClick={() => showToast("Photo sharing coming next 📸")}>
-                  +
-                </button>
-                <input
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") sendMessage();
-                  }}
-                  placeholder={`Message ${selectedChat.name}...`}
-                />
-                <button onClick={sendMessage} className="send-button">
-                  ↑
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="empty-chat">
-              <div>💬</div>
-              <h3>Choose a conversation</h3>
-              <p>Select a friend to open your chat.</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderPhotos = () => (
-    <section className="page-content">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">MEMORIES</span>
-          <h1>Your photos</h1>
-          <p>Beautiful moments deserve a beautiful home.</p>
-        </div>
-        <button
-          className="page-primary-button"
-          onClick={() => showToast("Photo upload is the next feature 📸")}
-        >
-          + Add photo
-        </button>
-      </div>
-
-      <div className="photo-wall">
-        <div className="photo-tile photo-one">
-          <span>🌅</span>
-          <strong>Golden moments</strong>
-        </div>
-        <div className="photo-tile photo-two">
-          <span>🌴</span>
-          <strong>Weekend vibes</strong>
-        </div>
-        <div className="photo-tile photo-three">
-          <span>🎉</span>
-          <strong>Good times</strong>
-        </div>
-        <div className="photo-tile photo-four">
-          <span>🌌</span>
-          <strong>Night memories</strong>
-        </div>
-        <div className="photo-tile photo-five">
-          <span>☕</span>
-          <strong>Little things</strong>
-        </div>
-        <div className="photo-tile photo-six">
-          <span>❤️</span>
-          <strong>Our people</strong>
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderGames = () => (
-    <section className="page-content">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">PLAYGROUND</span>
-          <h1>Play with friends</h1>
-          <p>Quick games. Friendly competition. Good memories.</p>
-        </div>
-      </div>
-
-      <div className="games-grid">
-        <button
-          className="game-card game-purple"
-          onClick={() => showToast("Tic Tac Toe is coming next 🎮")}
-        >
-          <span>⭕</span>
-          <h3>Tic Tac Toe</h3>
-          <p>Challenge a friend.</p>
-          <b>Play →</b>
-        </button>
-
-        <button
-          className="game-card game-blue"
-          onClick={() => showToast("Memory game is coming next 🧠")}
-        >
-          <span>🧠</span>
-          <h3>Memory Match</h3>
-          <p>Test your memory.</p>
-          <b>Play →</b>
-        </button>
-
-        <button
-          className="game-card game-pink"
-          onClick={() => showToast("Quiz game is coming next ✨")}
-        >
-          <span>⚡</span>
-          <h3>Quick Quiz</h3>
-          <p>Who knows more?</p>
-          <b>Play →</b>
-        </button>
-      </div>
-    </section>
-  );
-
-  const renderMusic = () => (
-    <section className="page-content">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">LISTEN TOGETHER</span>
-          <h1>Your music room</h1>
-          <p>Put on something good and share the vibe.</p>
-        </div>
-      </div>
-
-      <div className="music-room">
-        <div className="record">
-          <div className="record-center">♫</div>
-        </div>
-
-        <div className="music-info">
-          <span>NOW PLAYING</span>
-          <h2>Good Vibes Only</h2>
-          <p>JD Friendly Radio</p>
-
-          <div className="music-progress">
-            <span />
-          </div>
-
-          <div className="music-time">
-            <span>0:42</span>
-            <span>3:28</span>
-          </div>
-
-          <div className="music-controls">
-            <button>↶</button>
-            <button className="play-button">▶</button>
-            <button>↷</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-
-  const renderConnect = () => (
-    <section className="page-content">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">YOUR PEOPLE</span>
-          <h1>Find your friends</h1>
-          <p>Bring your people into your JD Friendly world.</p>
-        </div>
-        <button
-          className="page-primary-button"
-          onClick={() => showToast("Friend invites coming next 👥")}
-        >
-          + Invite friend
-        </button>
-      </div>
-
-      <div className="people-grid">
-        {demoFriends.map((friend) => (
-          <div className="person-card" key={friend.name}>
-            <div className={`person-avatar ${friend.color}`}>
-              {friend.avatar}
-              <i />
-            </div>
-            <h3>{friend.name}</h3>
-            <p>{friend.status}</p>
-            <button
-              onClick={() => {
-                setActivePage("messages");
-                setSelectedChat(friend);
-              }}
-            >
-              Message
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-
-  const renderPage = () => {
-    if (activePage === "home") return renderHome();
-    if (activePage === "messages") return renderMessages();
-    if (activePage === "photos") return renderPhotos();
-    if (activePage === "games") return renderGames();
-    if (activePage === "music") return renderMusic();
-    if (activePage === "connect") return renderConnect();
-
-    return renderHome();
-  };
-
-  return (
-    <div className="jd-app">
-      <div className="app-background">
-        <div className="app-orb app-orb-one" />
-        <div className="app-orb app-orb-two" />
-        <div className="app-orb app-orb-three" />
-      </div>
-
-      <header className="app-header">
-        <button
-          className="app-logo-area"
-          onClick={() => setActivePage("home")}
-        >
-          <div className="app-logo">JD</div>
-          <div className="app-brand">
-            <strong>JD Friendly</strong>
-            <span>Connect • Share • Play</span>
-          </div>
-        </button>
-
-        <div className="header-center">
-          <div className="global-search">
-            <span>⌕</span>
-            <input
-              placeholder="Search friends, chats..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <div className="connection-status">
-            <i />
-            {serverStatus}
-          </div>
-
-          <button
-            className="header-avatar"
-            onClick={() => showToast("Profile settings coming next 👤")}
-          >
-            {firstLetter}
-          </button>
-
-          <button className="logout-button" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <div className="app-layout">
-        <aside className="sidebar">
-          <div className="sidebar-label">YOUR SPACE</div>
-
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              className={activePage === item.id ? "active" : ""}
-              onClick={() => setActivePage(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
-              {item.id === "messages" && <b>3</b>}
-            </button>
-          ))}
-
-          <div className="sidebar-bottom">
-            <div className="mini-profile">
-              <div>{firstLetter}</div>
-              <section>
-                <strong>{user.email?.split("@")[0] || "Friend"}</strong>
-                <span>Online</span>
-              </section>
-            </div>
-
-            <button
-              className="sidebar-settings"
-              onClick={() => showToast("Settings are coming next ⚙️")}
-            >
-              ⚙️ <span>Settings</span>
-            </button>
-          </div>
-        </aside>
-
-        <main className="app-content">{renderPage()}</main>
-      </div>
+        {renderPage()}
+      </main>
 
       <nav className="mobile-nav">
-        {navItems.slice(0, 5).map((item) => (
+        {NAV.map(([id, label, icon]) => (
           <button
-            key={item.id}
-            className={activePage === item.id ? "active" : ""}
-            onClick={() => setActivePage(item.id)}
+            key={id}
+            className={page === id ? "active" : ""}
+            onClick={() => setPage(id)}
           >
-            <span>{item.icon}</span>
-            <small>{item.label}</small>
+            <span>{icon}</span>
+            <small>{label}</small>
           </button>
         ))}
       </nav>
+    </div>
+  );
+}
 
-      {toast && <div className="jd-toast">{toast}</div>}
+function PageHeading({ eyebrow, title, text }) {
+  return (
+    <div className="page-heading">
+      <span className="eyebrow">{eyebrow}</span>
+      <h1>{title}</h1>
+      <p>{text}</p>
     </div>
   );
 }
