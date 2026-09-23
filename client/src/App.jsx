@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 import "./auth.css";
 import "./App.css";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {const [showAuth, setShowAuth] = useState(false);
+  const [user, setUser] = useState(null);
   const [authMode, setAuthMode] = useState("login");
   
 
@@ -26,6 +27,21 @@ function App() {const [showAuth, setShowAuth] = useState(false);
       });
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
   const handleLogin = async (event) => {
     event.preventDefault();
 
@@ -64,6 +80,112 @@ function App() {const [showAuth, setShowAuth] = useState(false);
     alert("Account created successfully! Please check your email to confirm your account.");
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setShowAuth(false);
+    setAuthMode("login");
+  };
+
+  if (user) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-orb orb-one"></div>
+        <div className="dashboard-orb orb-two"></div>
+        <div className="dashboard-orb orb-three"></div>
+
+        <nav className="dashboard-nav">
+          <div className="dashboard-brand">
+            <div className="dashboard-logo">JD</div>
+            <div>
+              <strong>JD Friendly</strong>
+              <span>Connect • Share • Play</span>
+            </div>
+          </div>
+
+          <button className="dashboard-logout" onClick={handleLogout}>
+            Logout
+          </button>
+        </nav>
+
+        <main className="dashboard-content">
+          <section className="dashboard-hero">
+            <div className="hero-badge">✦ YOU'RE IN</div>
+
+            <h1>
+              Welcome to
+              <span> JD Friendly</span>
+            </h1>
+
+            <p>
+              Your friends. Your world. One place.
+            </p>
+
+            <div className="profile-card">
+              <div className="profile-avatar">
+                {(user.email?.[0] || "J").toUpperCase()}
+              </div>
+
+              <div className="profile-info">
+                <span className="profile-label">SIGNED IN AS</span>
+                <strong>{user.email}</strong>
+                <div className="online-status">
+                  <i></i>
+                  Online now
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="dashboard-grid">
+            <button className="dashboard-card card-purple">
+              <div className="card-icon">💬</div>
+              <strong>Messages</strong>
+              <span>Chat with your friends</span>
+              <b>Open →</b>
+            </button>
+
+            <button className="dashboard-card card-pink">
+              <div className="card-icon">📸</div>
+              <strong>Photos</strong>
+              <span>Share your moments</span>
+              <b>Open →</b>
+            </button>
+
+            <button className="dashboard-card card-blue">
+              <div className="card-icon">🎮</div>
+              <strong>Games</strong>
+              <span>Play together</span>
+              <b>Open →</b>
+            </button>
+
+            <button className="dashboard-card card-orange">
+              <div className="card-icon">🎵</div>
+              <strong>Music</strong>
+              <span>Listen together</span>
+              <b>Open →</b>
+            </button>
+          </section>
+
+          <section className="dashboard-connect">
+            <div>
+              <span className="section-kicker">YOUR WORLD</span>
+              <h2>Connect beyond borders 🌍</h2>
+              <p>
+                Friends across cities, districts, states and countries.
+              </p>
+            </div>
+
+            <div className="connection-pills">
+              <span>🌍 Global</span>
+              <span>⚡ Instant</span>
+              <span>💜 Friendly</span>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
   if (showAuth) {
   return (
     <div className="auth-page">
@@ -88,7 +210,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 
         <div className="auth-switch">
           <button type="button" onClick={() => setShowAuth(false)}>
-            ← Back to JD Friendly
+            â† Back to JD Friendly
           </button>
         </div>
       </div>
@@ -107,7 +229,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 
           <div>
             <h1>JD Friendly</h1>
-            <span>Connect • Share • Play</span>
+            <span>Connect â€¢ Share â€¢ Play</span>
           </div>
         </div>
 
@@ -131,7 +253,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 
           <p>
             Chat with friends, share photos, discover people around the world,
-            play together, and enjoy music — all inside JD Friendly.
+            play together, and enjoy music â€” all inside JD Friendly.
           </p>
 
           <div className="hero-actions">
@@ -143,7 +265,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 
           <div className="features">
             <div className="feature-card">
-              <div className="feature-icon">💬</div>
+              <div className="feature-icon">ðŸ’¬</div>
               <div>
                 <strong>Real-time chat</strong>
                 <span>Talk with your friends instantly.</span>
@@ -151,7 +273,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🌍</div>
+              <div className="feature-icon">ðŸŒ</div>
               <div>
                 <strong>Connect globally</strong>
                 <span>Friends across cities and countries.</span>
@@ -159,7 +281,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🎮</div>
+              <div className="feature-icon">ðŸŽ®</div>
               <div>
                 <strong>Play together</strong>
                 <span>Games and shared experiences.</span>
@@ -202,7 +324,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
                   <div className="small-avatar">A</div>
                   <div>
                     <strong>Arjun</strong>
-                    <span>Hey! 👋</span>
+                    <span>Hey! ðŸ‘‹</span>
                   </div>
                   <b>2</b>
                 </div>
@@ -228,19 +350,19 @@ function App() {const [showAuth, setShowAuth] = useState(false);
                 <div className="chat-header">
                   <div>
                     <strong>Arjun</strong>
-                    <span>● Active now</span>
+                    <span>â— Active now</span>
                   </div>
 
                   <div className="chat-actions">
-                    <button>📞</button>
-                    <button>🎥</button>
-                    <button>⋯</button>
+                    <button>ðŸ“ž</button>
+                    <button>ðŸŽ¥</button>
+                    <button>â‹¯</button>
                   </div>
                 </div>
 
                 <div className="messages">
                   <div className="message received">
-                    Hey Prasanna! 👋
+                    Hey Prasanna! ðŸ‘‹
                   </div>
 
                   <div className="message received">
@@ -248,7 +370,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
                   </div>
 
                   <div className="message sent">
-                    Absolutely! 🚀
+                    Absolutely! ðŸš€
                   </div>
 
                   <div className="message sent">
@@ -258,7 +380,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 
                 <div className="message-box">
                   <span>Write a message...</span>
-                  <button>➤</button>
+                  <button>âž¤</button>
                 </div>
               </div>
             </div>
@@ -267,7 +389,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
       </main>
 
       <footer>
-        <span>© 2026 JD Friendly</span>
+        <span>Â© 2026 JD Friendly</span>
         <span>Made to bring friends closer.</span>
       </footer>
     </div>
@@ -275,6 +397,7 @@ function App() {const [showAuth, setShowAuth] = useState(false);
 }
 
 export default App;
+
 
 
 
